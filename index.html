@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline Playero</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Lexend:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --arena: #f4e8d8;
+            --ocean: #2d5f7a;
+            --ocean-light: #4a8fb0;
+            --sunset: #e67e50;
+            --palmera: #5d6e4b;
+            --crema: #fef9f3;
+            --sombra: rgba(45, 95, 122, 0.15);
+        }
+
+        body {
+            font-family: 'Lexend', sans-serif;
+            background: linear-gradient(180deg, var(--arena) 0%, #ead6c0 100%);
+            color: var(--ocean);
+            overflow-x: auto;
+            overflow-y: hidden;
+            height: 100vh;
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%232d5f7a' d='M12 2c5.5 0 10 4.5 10 10s-4.5 10-10 10-10-4.5-10-10 4.5-10 10-10zm0 18c4.4 0 8-3.6 8-8s-3.6-8-8-8-8 3.6-8 8 3.6 8 8 8z'/%3E%3C/svg%3E"), auto;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(255, 255, 255, 0.03) 2px,
+                    rgba(255, 255, 255, 0.03) 4px
+                );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        body:active {
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%232d5f7a' d='M12 2c5.5 0 10 4.5 10 10s-4.5 10-10 10-10-4.5-10-10 4.5-10 10-10z'/%3E%3C/svg%3E"), auto;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            height: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(244, 232, 216, 0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--sunset);
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d86d42;
+        }
+
+        .timeline-container {
+            display: flex;
+            height: 100vh;
+            width: max-content;
+            padding: 0 10vw;
+            align-items: center;
+            gap: 12vw;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Línea de tiempo decorativa */
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                var(--ocean-light) 10%,
+                var(--ocean-light) 90%,
+                transparent 100%
+            );
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+
+        .chapter {
+            position: relative;
+            width: 45vw;
+            min-width: 380px;
+            max-width: 550px;
+            animation: fadeInUp 0.8s ease-out forwards;
+            animation-delay: calc(var(--index) * 0.2s);
+            opacity: 0;
+            z-index: 1;
+            transform: scale(0.8);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chapter:nth-child(1) { --index: 0; }
+        .chapter:nth-child(2) { --index: 1; }
+        .chapter:nth-child(3) { --index: 2; }
+        .chapter:nth-child(4) { --index: 3; }
+        .chapter:nth-child(5) { --index: 4; }
+        .chapter:nth-child(6) { --index: 5; }
+
+        /* Número del capítulo - estilo surf vintage */
+        .chapter-number {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Abril Fatface', serif;
+            font-size: 3.5rem;
+            color: var(--sunset);
+            opacity: 0.2;
+            line-height: 1;
+            z-index: 0;
+        }
+
+        .card {
+            background: var(--crema);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 
+                0 10px 40px var(--sombra),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        
+        .card::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .card::-webkit-scrollbar-track {
+            background: rgba(244, 232, 216, 0.3);
+            border-radius: 3px;
+        }
+        
+        .card::-webkit-scrollbar-thumb {
+            background: var(--sunset);
+            border-radius: 3px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Decoración de olas en las cards */
+        .card::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--ocean-light),
+                var(--ocean-light) 10px,
+                transparent 10px,
+                transparent 20px
+            );
+            opacity: 0.3;
+        }
+
+        .prompt-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--sunset);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .section-label:hover {
+            color: #d86d42;
+        }
+
+        .section-label::after {
+            content: '▼';
+            font-size: 0.7rem;
+            transition: transform 0.3s ease;
+        }
+
+        .section-label.collapsed::after {
+            transform: rotate(-90deg);
+        }
+
+        .expandable-content {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.4s ease, margin 0.4s ease;
+            opacity: 1;
+        }
+
+        .expandable-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin: 0;
+        }
+
+        .prompt-full-text {
+            font-size: 0.75rem;
+            font-style: italic;
+            margin-top: -0.5rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        .prompt-text {
+            font-family: 'Abril Fatface', serif;
+            font-size: 1.2rem;
+            color: var(--ocean);
+            line-height: 1.3;
+            margin-bottom: 1rem;
+        }
+
+        .result-text {
+            font-size: 0.85rem;
+            color: var(--palmera);
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        .image-container {
+            margin: 1rem 0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px var(--sombra);
+            position: relative;
+        }
+
+        .image-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            pointer-events: none;
+        }
+
+        .image-placeholder {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: linear-gradient(135deg, var(--ocean-light), var(--ocean));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--crema);
+            font-size: 1.2rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        /* Punto decorativo en la línea de tiempo */
+        .timeline-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: var(--sunset);
+            border-radius: 50%;
+            border: 4px solid var(--crema);
+            box-shadow: 0 0 0 8px rgba(230, 126, 80, 0.2);
+            z-index: 2;
+        }
+
+        /* Sección final de audio */
+        .audio-finale {
+            position: relative;
+            width: 45vw;
+            min-width: 380px;
+            max-width: 550px;
+            animation: fadeInUp 0.8s ease-out forwards;
+            animation-delay: 1s;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .audio-card {
+            background: linear-gradient(135deg, var(--ocean) 0%, var(--ocean-light) 100%);
+            border-radius: 20px;
+            padding: 2rem 1.5rem;
+            box-shadow: 
+                0 15px 50px rgba(45, 95, 122, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        
+        .audio-card::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .audio-card::-webkit-scrollbar-track {
+            background: rgba(254, 249, 243, 0.1);
+            border-radius: 3px;
+        }
+        
+        .audio-card::-webkit-scrollbar-thumb {
+            background: var(--crema);
+            border-radius: 3px;
+        }
+
+        .audio-card::before {
+            content: '🌊';
+            position: absolute;
+            font-size: 15rem;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.05;
+        }
+
+        .audio-title {
+            font-family: 'Abril Fatface', serif;
+            font-size: 1.8rem;
+            color: var(--crema);
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .audio-subtitle {
+            color: rgba(254, 249, 243, 0.8);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            letter-spacing: 1px;
+            position: relative;
+        }
+
+        .audio-placeholder {
+            background: rgba(254, 249, 243, 0.15);
+            border: 2px dashed rgba(254, 249, 243, 0.4);
+            border-radius: 15px;
+            padding: 3rem;
+            color: var(--crema);
+            font-size: 1.2rem;
+            font-weight: 300;
+            position: relative;
+        }
+
+        /* Animación de olas de fondo */
+        @keyframes wave {
+            0%, 100% {
+                transform: translateX(0) translateY(0);
+            }
+            50% {
+                transform: translateX(-20px) translateY(-10px);
+            }
+        }
+
+        .wave-decoration {
+            position: fixed;
+            bottom: -50px;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120'%3E%3Cpath d='M0 0v120h1200V0c-100 30-200 60-300 60S700 30 600 60s-200 0-300-30S100 0 0 0z' fill='%234a8fb0' opacity='0.1'/%3E%3C/svg%3E");
+            background-size: 1200px 120px;
+            animation: wave 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Instrucciones de scroll */
+        .scroll-hint {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--ocean);
+            font-size: 0.9rem;
+            opacity: 0.6;
+            z-index: 1001;
+            animation: bounce 2s infinite;
+            letter-spacing: 1px;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            50% {
+                transform: translateX(-50%) translateY(-10px);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chapter, .audio-finale {
+                width: 85vw;
+                min-width: 300px;
+            }
+
+            .card {
+                padding: 2rem;
+            }
+
+            .prompt-text {
+                font-size: 1.4rem;
+            }
+
+            .chapter-number {
+                font-size: 4rem;
+                top: -60px;
+            }
+
+            .audio-title {
+                font-size: 2rem;
+            }
+
+            .timeline-container {
+                gap: 8vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wave-decoration"></div>
+    
+    <div class="timeline-container">
+        <!-- Capítulo 1 -->
+        <div class="chapter">
+            <div class="chapter-number">01</div>
+            <div class="timeline-dot"></div>
+            <div class="card">
+                <div class="prompt-section">
+                    <div class="section-label collapsed">Ver Prompt Completo</div>
+                    <div class="expandable-content collapsed">
+                        <div class="prompt-text">Inversión a largo plazo (concepto base)</div>
+                        <div class="prompt-full-text">
+                            Actúa como un analista financiero orientado a educación financiera. Explica de forma clara y accesible qué es la inversión a largo plazo y por qué es una estrategia clave para construir patrimonio de manera sostenida. Incluí conceptos como horizonte temporal, interés compuesto, control emocional y toma de decisiones racionales. El tono debe ser profesional, claro y didáctico. Extensión: 2 a 3 párrafos.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="image-container">
+                    <img src="img/IMG P1.png" alt="Imagen 1" style="width: 100%; display: block;">
+                </div>
+                
+                <div class="section-label collapsed">Ver Resultado</div>
+                <div class="expandable-content collapsed">
+                    <div class="result-text">
+                        <strong>Qué es invertir a largo plazo</strong><br><br>
+                        Invertir a largo plazo consiste en destinar capital con una visión de futuro, priorizando un horizonte temporal amplio en lugar de buscar resultados inmediatos. Esta estrategia permite que el interés compuesto actúe de manera sostenida, reinvirtiendo las ganancias y potenciando el crecimiento del patrimonio con el paso del tiempo. Cuanto mayor es el plazo, mayor es el impacto del tiempo sobre los resultados.<br><br>
+                        Un aspecto clave de la inversión a largo plazo es el control emocional. Los mercados atraviesan ciclos de subas y bajas, y reaccionar impulsivamente ante la volatilidad suele conducir a decisiones poco racionales. Por el contrario, mantener una estrategia definida y coherente ayuda a reducir errores y a sostener el rumbo aun en contextos inciertos.<br><br>
+                        En definitiva, invertir a largo plazo no se basa en predecir el mercado, sino en tomar decisiones racionales, apoyadas en el tiempo, la disciplina y la constancia. Esta combinación resulta fundamental para construir patrimonio de manera sólida y sostenible.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Capítulo 2 -->
+        <div class="chapter">
+            <div class="chapter-number">02</div>
+            <div class="timeline-dot"></div>
+            <div class="card">
+                <div class="prompt-section">
+                    <div class="section-label collapsed">Ver Prompt Completo</div>
+                    <div class="expandable-content collapsed">
+                        <div class="prompt-text">Portfolio diversificado a largo plazo</div>
+                        <div class="prompt-full-text">
+                            Actúa como asesor financiero. Diseña un ejemplo de portfolio de inversión a largo plazo para una persona con tolerancia al riesgo moderada, explicando la importancia de la diversificación entre distintos tipos de activos. Describe cada categoría de activo y el rol que cumple dentro del portfolio. Evita dar recomendaciones personalizadas; enfócate en el concepto. Presenta la información de forma clara y ordenada.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="image-container">
+                    <img src="img/IMG P2.png" alt="Imagen 2" style="width: 100%; display: block;">
+                </div>
+                
+                <div class="section-label collapsed">Ver Resultado</div>
+                <div class="expandable-content collapsed">
+                    <div class="result-text">
+                        <strong>Un portfolio diversificado a largo plazo</strong><br><br>
+                        Un portfolio de inversión a largo plazo con riesgo moderado suele componerse de distintos tipos de activos, cada uno con un rol específico dentro de la estrategia. La diversificación busca equilibrar crecimiento, estabilidad y protección frente a diferentes escenarios del mercado.<br><br>
+                        Los activos orientados al crecimiento suelen aportar mayor potencial de rentabilidad en el largo plazo, aunque con mayor volatilidad en el corto. Por otro lado, los activos más defensivos contribuyen a reducir la variabilidad del portfolio y a amortiguar los movimientos bruscos del mercado. Finalmente, los activos más líquidos o conservadores brindan flexibilidad y respaldo ante situaciones imprevistas.<br><br>
+                        La combinación de estas categorías permite construir un portfolio más equilibrado, donde el riesgo se gestiona de forma eficiente y los resultados no dependen de una única fuente. La diversificación no elimina el riesgo, pero lo distribuye de manera más inteligente.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Capítulo 3 -->
+        <div class="chapter">
+            <div class="chapter-number">03</div>
+            <div class="timeline-dot"></div>
+            <div class="card">
+                <div class="prompt-section">
+                    <div class="section-label collapsed">Ver Prompt Completo</div>
+                    <div class="expandable-content collapsed">
+                        <div class="prompt-text">Paciencia y constancia en la inversión</div>
+                        <div class="prompt-full-text">
+                            Redacta un texto explicativo que aborde la importancia de la paciencia y la constancia en la inversión a largo plazo. Explica cómo las emociones, la volatilidad del mercado y la ansiedad pueden llevar a malas decisiones financieras, y por qué confiar en una estrategia definida es clave para obtener buenos resultados en el tiempo. El tono debe ser racional, realista y profesional. Extensión: 1 a 2 párrafos.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="image-container">
+                    <img src="img/IMG P3.png" alt="Imagen 3" style="width: 100%; display: block;">
+                </div>
+                
+                <div class="section-label collapsed">Ver Resultado</div>
+                <div class="expandable-content collapsed">
+                    <div class="result-text">
+                        <strong>Paciencia y constancia en la inversión</strong><br><br>
+                        La paciencia y la constancia son dos pilares fundamentales en la inversión a largo plazo. Los mercados no crecen de forma lineal y atraviesan períodos de alta volatilidad que pueden generar ansiedad e incertidumbre en los inversores. En esos momentos, las emociones suelen ser el principal enemigo de una buena decisión financiera.<br><br>
+                        Reaccionar de manera impulsiva ante caídas temporales o movimientos bruscos suele derivar en errores, como abandonar una estrategia bien definida o tomar decisiones apresuradas. En cambio, mantener la constancia y confiar en un plan previamente establecido permite atravesar estos ciclos con mayor estabilidad.<br><br>
+                        Invertir a largo plazo implica comprender que los resultados se construyen con el tiempo. La paciencia no es pasividad, sino la capacidad de sostener decisiones racionales aun cuando el contexto genera dudas o incomodidad.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Capítulo 4 -->
+        <div class="chapter">
+            <div class="chapter-number">04</div>
+            <div class="timeline-dot"></div>
+            <div class="card">
+                <div class="prompt-section">
+                    <div class="section-label collapsed">Ver Prompt Completo</div>
+                    <div class="expandable-content collapsed">
+                        <div class="prompt-text">Riesgo, tiempo y volatilidad</div>
+                        <div class="prompt-full-text">
+                            Actúa como analista financiero. Explica la relación entre riesgo, tiempo y volatilidad en la inversión a largo plazo. Describe por qué la volatilidad no debe interpretarse necesariamente como una señal negativa y cómo el horizonte temporal influye en la percepción del riesgo. El tono debe ser profesional y educativo. Extensión: 1 a 2 párrafos.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="image-container">
+                    <img src="img/IMG P4.png" alt="Imagen 4" style="width: 100%; display: block;">
+                </div>
+                
+                <div class="section-label collapsed">Ver Resultado</div>
+                <div class="expandable-content collapsed">
+                    <div class="result-text">
+                        <strong>Riesgo, tiempo y volatilidad</strong><br><br>
+                        El riesgo, el tiempo y la volatilidad están estrechamente relacionados en la inversión a largo plazo. La volatilidad representa las fluctuaciones naturales de los mercados y no debe interpretarse necesariamente como una señal negativa. De hecho, es una característica inherente a cualquier proceso de crecimiento.<br><br>
+                        Cuando el horizonte temporal es amplio, el impacto de la volatilidad tiende a diluirse. Las variaciones de corto plazo pierden relevancia frente a la tendencia general de largo plazo, lo que permite asumir cierto nivel de riesgo de manera más consciente y controlada.<br><br>
+                        Comprender esta relación ayuda a cambiar la percepción del riesgo. En lugar de enfocarse en los movimientos diarios, el inversor de largo plazo prioriza el tiempo como aliado, entendiendo que la volatilidad es parte del camino y no un obstáculo en sí mismo.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Capítulo 5 -->
+        <div class="chapter">
+            <div class="chapter-number">05</div>
+            <div class="timeline-dot"></div>
+            <div class="card">
+                <div class="prompt-section">
+                    <div class="section-label collapsed">Ver Prompt Completo</div>
+                    <div class="expandable-content collapsed">
+                        <div class="prompt-text">Estrategia vs predicción</div>
+                        <div class="prompt-full-text">
+                            Actúa como asesor financiero orientado a educación financiera. Explica por qué contar con una estrategia de inversión definida es más importante que intentar anticipar los movimientos del mercado. Aborda conceptos como disciplina, coherencia y largo plazo, evitando referencias a instrumentos específicos. El tono debe ser claro, racional y profesional. Extensión: 1 a 2 párrafos.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="image-container">
+                    <img src="img/IMG P5.png" alt="Imagen 5" style="width: 100%; display: block;">
+                </div>
+                
+                <div class="section-label collapsed">Ver Resultado</div>
+                <div class="expandable-content collapsed">
+                    <div class="result-text">
+                        <strong>Estrategia antes que predicción</strong><br><br>
+                        Contar con una estrategia de inversión definida es más importante que intentar anticipar los movimientos del mercado. La predicción constante suele generar decisiones erráticas, basadas en información incompleta o en reacciones emocionales ante el contexto del momento.<br><br>
+                        Una estrategia clara aporta disciplina y coherencia. Permite tomar decisiones alineadas con objetivos de largo plazo, evitando cambios innecesarios frente a situaciones transitorias. Esta consistencia resulta clave para sostener el proceso de inversión a lo largo del tiempo.<br><br>
+                        En el largo plazo, los mejores resultados no provienen de acertar el momento exacto, sino de mantener una visión clara, racional y sostenida. La estrategia actúa como un marco de referencia que ordena las decisiones y brinda tranquilidad frente a la incertidumbre.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Final -->
+        <div class="audio-finale">
+            <div class="timeline-dot"></div>
+            <div class="audio-card">
+                <div class="audio-title">El Final</div>
+                <div class="audio-subtitle">Guión del audio explicativo (1:30 min)</div>
+                <div class="result-text" style="color: var(--crema); margin-bottom: 1rem; font-size: 0.8rem; text-align: left; line-height: 1.5;">
+                    <strong>Prompt para el audio:</strong><br><br>
+                    Actúa como narrador con conocimientos en educación financiera. Redacta un guión de audio de aproximadamente 1 minuto y 30 segundos, con un tono conversacional, claro y profesional. El audio debe integrar los siguientes conceptos: inversión a largo plazo, horizonte temporal, interés compuesto, diversificación, gestión emocional, volatilidad, paciencia, constancia y la importancia de contar con una estrategia definida. El objetivo es explicar de forma accesible por qué invertir a largo plazo genera tranquilidad y mejores decisiones financieras. Evita tecnicismos excesivos y referencias a instrumentos específicos. El texto debe ser fluido, natural y apto para ser narrado con una voz sintética.
+                </div>
+                <audio controls style="width: 100%; margin-top: 1rem;">
+                    <source src="audio/explicacion-audio.mp3" type="audio/mpeg">
+                    Tu navegador no soporta el elemento de audio.
+                </audio>
+            </div>
+        </div>
+    </div>
+
+    <div class="scroll-hint">← Scrollea horizontalmente para navegar la historia →</div>
+
+    <script>
+        // Convertir scroll vertical en scroll horizontal
+        const container = document.querySelector('.timeline-container');
+        const body = document.body;
+        
+        // Ajustar altura del body para permitir scroll vertical
+        function updateBodyHeight() {
+            const scrollWidth = container.scrollWidth;
+            body.style.height = scrollWidth + 'px';
+        }
+        
+        updateBodyHeight();
+        window.addEventListener('resize', updateBodyHeight);
+        
+        // Convertir scroll vertical a horizontal
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            container.style.transform = `translateX(-${scrollTop}px)`;
+        });
+        
+        // También permitir scroll horizontal nativo
+        let isScrolling = false;
+        container.addEventListener('wheel', (e) => {
+            // Detectar si el cursor está sobre una tarjeta con scroll interno
+            const card = e.target.closest('.card, .audio-card');
+            if (card) {
+                const isScrollable = card.scrollHeight > card.clientHeight;
+                if (isScrollable) {
+                    const atTop = card.scrollTop <= 0;
+                    const atBottom = Math.abs(card.scrollHeight - card.scrollTop - card.clientHeight) < 1;
+                    
+                    // Si no estamos en los límites, permitir el scroll nativo de la tarjeta
+                    if ((e.deltaY < 0 && !atTop) || (e.deltaY > 0 && !atBottom)) return;
+                }
+            }
+
+            if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+                // Si es scroll horizontal nativo, permitirlo
+                return;
+            }
+            // Si es scroll vertical, convertirlo a horizontal
+            e.preventDefault();
+            window.scrollBy(0, e.deltaY);
+        }, { passive: false });
+
+        // Funcionalidad de expandir/colapsar secciones
+        document.addEventListener('DOMContentLoaded', () => {
+            // Colapsar todos los prompts y resultados al inicio
+            const allLabels = document.querySelectorAll('.section-label');
+            const allContents = document.querySelectorAll('.expandable-content');
+            
+            // Colapsar todo al inicio
+            allLabels.forEach(label => label.classList.add('collapsed'));
+            allContents.forEach(content => content.classList.add('collapsed'));
+            
+            // Agregar event listeners
+            allLabels.forEach((label, index) => {
+                label.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const content = label.nextElementSibling;
+                    
+                    // Toggle collapsed state
+                    label.classList.toggle('collapsed');
+                    content.classList.toggle('collapsed');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
